@@ -56,7 +56,7 @@ const User = require('../models/User')
     })
   }
   
-  exports.postSignup = (req, res, next) => {
+  exports.postSignup = async (req, res, next) => {
     const validationErrors = []
     if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' })
     if (!validator.isLength(req.body.password, { min: 8 })) validationErrors.push({ msg: 'Password must be at least 8 characters long' })
@@ -74,24 +74,21 @@ const User = require('../models/User')
       password: req.body.password,
       score: 0
     })
-  
-    User.findOne({$or: [
-      {email: req.body.email},
-      {userName: req.body.userName}
-    ]}, (err, existingUser) => {
-      if (err) { return next(err) }
-      if (existingUser) {
-        req.flash('errors', { msg: 'Account with that email address or username already exists.' })
-        return res.redirect('../signup')
-      }
-      user.save((err) => {
-        if (err) { return next(err) }
-        req.logIn(user, (err) => {
-          if (err) {
-            return next(err)
-          }
-          res.redirect('/morse')
-        })
-      })
-    })
+    try {
+      const checkUser = await User.findOne({$or: [
+        {email: req.body.email},
+        {userName: req.body.userName}]})
+      if (checkUser) {
+          req.flash('errors', { msg: 'Account with that email address or username already exists.' })
+          return res.redirect('../signup')
+        }
+      user.save()
+
+      req.logIn(user)
+      res.redirect('/morse')
+      
+    } catch (err) {
+      return next(err)
+    }
+    
   }
