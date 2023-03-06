@@ -5,6 +5,8 @@ const { ensureAuth } = require('../middleware/auth')
 
 router.get('/', ensureAuth, morseController.getMorse)
 
+router.get('/unmorsefy', ensureAuth, morseController.getMorse)
+
 router.get('/suggest', ensureAuth, morseController.getSuggest)
 
 router.get('/scores', ensureAuth, morseController.getScores)
